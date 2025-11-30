@@ -33,6 +33,12 @@ namespace BankSim.Database
             {
                 b.HasKey(t => t.Id);
 
+                // Persistir enum como string em vez de inteiro
+                b.Property(t => t.Tipo)
+                 .HasConversion<string>()
+                 .HasMaxLength(50)
+                 .IsRequired();
+
                 b.HasOne(t => t.ContaOrigem)
                  .WithMany(c => c.TransacoesEnviadas)
                  .HasForeignKey(t => t.ContaOrigemId)

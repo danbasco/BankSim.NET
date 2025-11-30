@@ -1,13 +1,23 @@
 ﻿using BankSim.API.Requests;
 using BankSim.Database;
 using BankSim.Models;
+using BankSim.Models.Contas;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 
 
 namespace BankSim.Services
 {
     internal class ClienteService
     {
+
+        private readonly DAL<Cliente> _dal;
+
+        public ClienteService(DAL<Cliente> dal)
+        {
+            _dal = dal;
+        }
+
         /**
          * @param dateString Formato "AAAA-MM-DD"
          * returns DateTime
@@ -55,9 +65,9 @@ namespace BankSim.Services
          * @param cpf String contendo o número do CPF a ser verificado
          * returns bool True se o CPF já existir, false caso contrário
          */
-        private bool CPFJaExiste(DAL<Cliente> dal, string cpf)
+        private bool CPFJaExiste(string cpf)
         {
-            var existingCliente = dal.GetBy(c => c.Cpf == cpf);
+            var existingCliente = _dal.GetBy(c => c.Cpf == cpf);
             return existingCliente != null;
         }
 
@@ -66,11 +76,11 @@ namespace BankSim.Services
          * @param clienteRequest Objeto contendo os dados do cliente a ser criado
          * returns IResult Resultado da operação
          */
-        public IResult CriarCliente(DAL<Cliente> dal, [FromBody] ClienteRequest clienteRequest)
+        public IResult CriarCliente([FromBody] ClienteRequest clienteRequest)
         {
 
             if(!ValidarCpf(clienteRequest.CPF)) { return Results.BadRequest("CPF inválido."); }
-            if(CPFJaExiste(dal, clienteRequest.CPF)) { return Results.Conflict("CPF já cadastrado."); }
+            if(CPFJaExiste(clienteRequest.CPF)) { return Results.Conflict("CPF já cadastrado."); }
 
             var cliente = new Cliente(
                 clienteRequest.Nome,
@@ -78,7 +88,7 @@ namespace BankSim.Services
                 ConvertStringToDateTime(clienteRequest.DataNascimento)
             );
 
-            dal.Add(cliente);
+            _dal.Add(cliente);
             return Results.Created($"/clientes/{cliente.Id}", cliente);
         }
 
@@ -86,9 +96,18 @@ namespace BankSim.Services
          * Lista todos os clientes do banco de dados
          * returns IResult Resultado da operação contendo a lista de clientes
          */
-        public IResult ListarTodosClientes(DAL<Cliente> dal)
+        public IResult ListarTodosClientes()
         {
-            var clientes = dal.GetAll();
+            var clientes = _dal.Query()
+                .AsNoTracking()
+                .Select(c => new
+                {
+                    Id = c.Id,
+                    Nome = c.Nome,
+                    Cpf = c.Cpf,
+                    DataNascimento = c.DataNascimento, 
+                })
+                .ToList(); ;
             return Results.Ok(clientes);
         }
 
@@ -97,14 +116,25 @@ namespace BankSim.Services
          * @param id Inteiro representando o ID do cliente a ser obtido
          * returns IResult Resultado da operação contendo o cliente encontrado
          */
-        public IResult ObterClientePorId(DAL<Cliente> dal, int id)
+        public IResult ObterClientePorId(int id)
         {
-            var cliente = dal.GetBy(c => c.Id == id);
+            var cliente = _dal.GetBy(c => c.Id == id);
             if (cliente == null)
             {
                 return Results.NotFound("Cliente não encontrado.");
             }
-            return Results.Ok(cliente);
+            // Mapear para um objeto simples (sem proxy) antes de serializar
+            
+
+            var result = new
+            {
+                cliente.Id,
+                cliente.Nome,
+                cliente.Cpf,
+                cliente.DataNascimento,
+            };
+
+            return Results.Ok(result);
         }
 
         /**
@@ -112,14 +142,26 @@ namespace BankSim.Services
          * @param id Inteiro representando o ID do cliente cujas contas serão listadas
          * returns IResult Resultado da operação contendo a lista de contas do cliente
          */
-        public IResult ListarContasDoCliente(DAL<Cliente> dal, int id)
+        public IResult ListarContasDoCliente(int id)
         {
-            var cliente = dal.GetBy(c => c.Id == id);
+            var cliente = _dal.GetBy(c => c.Id == id);
             if (cliente == null)
             {
                 return Results.NotFound("Cliente não encontrado.");
             }
-            var contas = cliente.Contas;
+            var contas = cliente.Contas?.Select(c => new
+            {
+                Numero = c.Numero,
+                Tipo = c switch
+                {
+                    ContaCorrente => "Conta Corrente",
+                    ContaPoupanca => "Conta Poupança",
+                    _ => "Tipo Desconhecido"
+
+                },
+                Saldo = c.Saldo
+            }) ?? Enumerable.Empty<object>();
+
             return Results.Ok(contas);
         }
 

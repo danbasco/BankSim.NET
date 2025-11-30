@@ -23,5 +23,25 @@ namespace BankSim.Models.Contas
             Status = true;
         }
 
+        public void Depositar(float valor)
+        {
+            Saldo += valor;
+        }
+
+        public void Sacar(float valor)
+        {
+            Saldo -= valor;
+        }
+
+        public void AdicionarTransacaoEnviada(Transacao transacao)
+        {
+            TransacoesEnviadas?.Add(transacao);
+        }
+
+        public void AdicionarTransacaoRecebida(Transacao transacao)
+        {
+            TransacoesRecebidas?.Add(transacao);
+        }
+
     }
 }

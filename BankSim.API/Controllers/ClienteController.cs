@@ -8,29 +8,34 @@ namespace BankSim.Controllers
 {
     internal class ClienteController
     {
+        private readonly DAL<Cliente> _dal;
+        private readonly ClienteService clienteService;
 
-        private ClienteService clienteService = new ClienteService( );
-
-
-        public IResult ListarClientesController(DAL<Cliente> dal)
+        public ClienteController([FromServices] DAL<Cliente> dal)
         {
-            return clienteService.ListarTodosClientes(dal);
+            _dal = dal;
+            clienteService = new ClienteService(_dal);
+        }
+
+        public IResult ListarClientesController()
+        {
+            return clienteService.ListarTodosClientes();
         }
 
 
-        public IResult CriarClienteController(DAL<Cliente> dal, [FromBody] ClienteRequest clienteRequest)
+        public IResult CriarClienteController([FromBody] ClienteRequest clienteRequest)
         {
-            return clienteService.CriarCliente(dal, clienteRequest);
+            return clienteService.CriarCliente(clienteRequest);
         }
 
-        public IResult ObterClientePorIdController(DAL<Cliente> dal, int id)
+        public IResult ObterClientePorIdController(int id)
         {
-            return clienteService.ObterClientePorId(dal, id);
+            return clienteService.ObterClientePorId(id);
         }
 
-        public IResult ListarContasDoClienteController(DAL<Cliente> dal, int id)
+        public IResult ListarContasDoClienteController(int id)
         {
-            return clienteService.ListarContasDoCliente(dal, id);
+            return clienteService.ListarContasDoCliente(id);
 
         }
     }

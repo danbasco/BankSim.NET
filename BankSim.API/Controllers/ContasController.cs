@@ -10,15 +10,50 @@ namespace BankSim.Controllers
 {
     internal class ContasController
     {
-        public IResult ListarContasController(DAL<Conta> dal)
+
+        private readonly DAL<Conta> dal;
+        private readonly DAL<Cliente> clienteDal;
+        private readonly ContaService contaService;
+
+        public ContasController([FromServices] DAL<Conta> dal, [FromServices] DAL<Cliente> clienteDal)
         {
-            return new ContaService().ListarTodasContas(dal);
+
+            this.dal = dal;
+            this.clienteDal = clienteDal;
+            contaService = new ContaService(dal, clienteDal);
+        }
+
+        
+
+        public IResult ListarContasController()
+        {
+            return contaService.ListarTodasContas();
         }
 
 
-        public IResult CriarContaController(DAL<Conta> dal, DAL<Cliente> clienteDal, [FromBody] ContaRequest contaRequest)
+        public IResult CriarContaController([FromBody] ContaRequest contaRequest, TipoConta tipo)
         {
-            return new ContaService().CriarConta(dal, clienteDal, contaRequest);
+            return contaService.CriarConta(contaRequest, tipo);
+        }
+
+        public IResult DepositarController([FromRoute] int id, float valor)
+        {
+            return contaService.Depositar(id, valor);
+        }
+
+        public IResult SacarController([FromRoute] int id, float valor)
+        {
+            return contaService.Sacar(id, valor);
+        }
+
+        public IResult TransferirController([FromRoute]int id, int contaDestinoId, float valor, TipoTransacao tipo)
+        {
+            return contaService.Transferir(id, contaDestinoId, valor, tipo);
+        }
+
+        public IResult ListarTransferenciasController([FromRoute] int id)
+        {
+            return contaService.ListarTransferencias(id);
         }
 
     }
