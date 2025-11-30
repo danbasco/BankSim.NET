@@ -1,0 +1,5 @@
+<Solution>
+  <Project Path="BankSim.API/BankSim.API.csproj" Id="49c136d1-a65c-4993-8e7e-63718077e130" />
+  <Project Path="BankSim.Shared.Data/BankSim.Shared.Data.csproj" Id="078036ea-25ff-44ee-864c-a229955060af" />
+  <Project Path="BankSim.Shared.Models/BankSim.Shared.Models.csproj" Id="4a97d885-ff0f-41fc-8dd6-0dcbeae9d68e" />
+</Solution>
