@@ -7,9 +7,6 @@
         {
             app.MapClienteRoutes();
             app.MapContaRoutes();
-            app.MapTransacaoRoutes();
         }
-
-
     }
 }

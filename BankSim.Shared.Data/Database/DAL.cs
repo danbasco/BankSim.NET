@@ -1,6 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
+﻿using System.Linq.Expressions;
+using Microsoft.EntityFrameworkCore;
 
 namespace BankSim.Database
 {
@@ -14,10 +13,7 @@ namespace BankSim.Database
             this.context = context ?? throw new ArgumentNullException(nameof(context));
         }
 
-        public IEnumerable<T> GetAll()
-        {
-            return context.Set<T>().ToList();
-        }
+        public IEnumerable<T> GetAll() => context.Set<T>().AsNoTracking().ToList();
 
         public void Add(T entity)
         {
@@ -37,9 +33,19 @@ namespace BankSim.Database
             context.SaveChanges();
         }
 
-        public T? GetBy(Func<T, bool> predicate)
+        public T? GetBy(Expression<Func<T, bool>> predicate)
         {
             return context.Set<T>().FirstOrDefault(predicate);
+        }
+
+        public IQueryable<T> Query()
+        {
+            return context.Set<T>().AsNoTracking();
+        }
+
+        public void SaveChanges()
+        {
+            context.SaveChanges();
         }
 
     }
